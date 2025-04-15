@@ -1,0 +1,237 @@
+body {
+  background-color: #f8f9fa;
+  padding-top: 50px;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000; /* Ensures it stays above other content */
+  background-color: white; /* Add background color to prevent transparency */
+  border-bottom: 3px solid #eaeaea;
+  box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+  color: #0e4794 !important;
+  font-size: 24px;
+  font-weight: 500;
+  margin-left: 25px;
+}
+
+.btn-signout {
+  background-color: #0e4794 !important; /* Custom Blue */
+  color: white !important; /* Text color */
+  border: none !important; /* Remove default border */
+  padding: 10px 10px 10px 10px; /* Adjust padding */
+  margin-right: 25px;
+  font-size: 15px;
+  border-radius: 5px; /* Rounded corners */
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.3s ease-in-out, transform 0.1s ease-in-out;
+}
+
+.btn-signout:hover {
+  background-color: #08306e !important; /* Darker blue on hover */
+  transform: scale(1.05); /* Slight enlarge effect */
+  text-decoration-line: none;
+}
+
+.btn-signout:active {
+  background-color: #051d4a !important; /* Even darker when clicked */
+  transform: scale(0.98); /* Slight shrink effect */
+}
+
+.header-container {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.dataTables_wrapper {
+  position: relative;
+}
+
+.table-container {
+  max-height: auto; /* Adjust as needed */
+  margin-bottom: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.dataTables_length,
+.dataTables_filter {
+  position: relative;
+  z-index: 10; /* Keeps them above the table */
+  background: white; /* Prevents overlapping text */
+  padding: 10px;
+}
+
+.dataTables_paginate,
+.dataTables_info {
+  position: relative;
+  z-index: 10;
+  background: white;
+  padding: 10px;
+}
+
+/* Ensure proper text wrapping */
+.word-wrap {
+  word-break: break-word;
+  white-space: normal;
+  min-width: 120px; /* Adjust as needed */
+}
+
+th {
+  white-space: nowrap;
+  text-align: center !important;
+  background-color: #535353 !important;
+  color: #fff !important;
+}
+/* Prevent excessive column width */
+th,
+td {
+  text-align: center;
+  vertical-align: middle;
+  word-wrap: break-word;
+  max-width: 500px; /* Adjust as needed */
+}
+td img {
+  display: block;
+  margin: auto;
+  width: 150px; /* Adjust width as needed */
+  height: 150px; /* Keeps the aspect ratio */
+}
+
+.img-fluid {
+  max-width: 250%;
+  height: 10rem;
+}
+
+#actions {
+  white-space: nowrap !important;
+}
+
+#actions form {
+  display: inline-block;
+  margin-left: 5px; /* Adds space between buttons */
+}
+
+#edit-btn {
+  text-decoration: none;
+  background-color: #e7b501 !important; /* Custom Blue */
+  color: white !important; /* Text color */
+  border: none !important; /* Remove default border */
+  padding: 10px 20px; /* Adjust padding */
+  font-size: 16px;
+  border-radius: 5px; /* Rounded corners */
+  font-weight: 500;
+  transition: background 0.3s ease-in-out, transform 0.1s ease-in-out;
+}
+
+#edit-btn:hover {
+  background-color: #d4a600 !important; /* Darker blue on hover */
+  transform: scale(1.05); /* Slight enlarge effect */
+  text-decoration-line: none;
+}
+
+#edit-btn:active {
+  background-color: #ffc800 !important; /* Even darker when clicked */
+  transform: scale(0.98); /* Slight shrink effect */
+}
+#delete-btn {
+  text-decoration: none;
+  background-color: #e22228 !important; /* Custom Blue */
+  color: white !important; /* Text color */
+  border: none !important; /* Remove default border */
+  padding: 9px 10px; /* Adjust padding */
+  font-size: 16px;
+  border-radius: 5px; /* Rounded corners */
+  font-weight: 500;
+  transition: background 0.3s ease-in-out, transform 0.1s ease-in-out;
+}
+
+#delete-btn:hover {
+  background-color: #e2060d !important; /* Darker blue on hover */
+  text-decoration-line: none;
+}
+
+#delete-btn:active {
+  background-color: #e1060de6 !important; /* Even darker when clicked */
+  transform: scale(0.98); /* Slight shrink effect */
+}
+
+#back-icon {
+  color: #0e4794; /* Change to any color you want */
+  font-size: 32px;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  display: none; /* Initially hidden */
+}
+
+.loading-gif {
+  width: 100px; /* Adjust size as needed */
+}
+
+.image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.qr-image {
+  width: 100%; /* Adjust as needed */
+  height: auto;
+  display: block;
+}
+
+.download-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 50%;
+  font-size: 20px;
+  text-decoration: none;
+  display: none; /* Hidden by default */
+}
+
+.image-container:hover .download-btn {
+  display: block; /* Show only on hover */
+}
+
+#deleteAll {
+  text-decoration: none;
+  background-color: #e22228 !important; /* Custom Blue */
+  color: white !important; /* Text color */
+  border: none !important; /* Remove default border */
+  padding: 8px 10px; /* Adjust padding */
+  font-size: 16px;
+  border-radius: 5px; /* Rounded corners */
+  font-weight: 500;
+  transition: background 0.3s ease-in-out, transform 0.1s ease-in-out;
+}
+#deleteAll:hover {
+  background-color: #ce080f !important; /* Darker blue on hover */
+  text-decoration-line: none;
+}

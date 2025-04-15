@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Certificate Verification QR Generator - All Generated QR Codes</title>
+    <link rel="icon" type="image/png" href="/images/logo.png" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css"
+    />
+    <link rel="stylesheet" href="/css/view_all_generated.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/sweetalert2@11.16.0/dist/sweetalert2.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-light bg-light">
+      <a class="navbar-brand">Certificate Verification QR Generator</a>
+      <a href="/signout" class="btn-signout">Sign Out</a>
+    </nav>
+    <div id="loadingOverlay" class="loading-overlay">
+      <img src="/images/loading.gif" alt="Loading..." class="loading-gif" />
+    </div>
+    <div
+      class="container header-container d-flex align-items-center position-relative"
+    >
+      <a href="/home" class="position-absolute start-0">
+        <i class="fa-solid fa-circle-chevron-left" id="back-icon"></i>
+      </a>
+      <img
+        class="img-fluid mx-auto d-block"
+        src="/images/DICT BANNER LOGO.png"
+        alt="DICT Logo"
+      />
+    </div>
+    <h3 class="mt-3 text-center">Generated QR Verification</h3>
+    <div class="container table-container">
+      <div class="table-responsive">
+        <table
+          id="qr_codes_table"
+          class="table table-hover word-break"
+          style="width: 100%, stick"
+        >
+        <div class="container mt-3 text-end d-flex justify-content-end gap-2"> 
+          <button id="downloadExcel" class="btn btn-success">
+            <i class="fa-solid fa-file-excel"></i> Download
+          </button>
+          <button id="deleteAll" type="submit">
+            <i class="fa-solid fa-trash"></i> Delete All</button>
+        </div>   
+          <thead>
+            <tr>
+              <th>Fullname</th>
+              <th>Course</th>
+              <th>Course Code</th>
+              <th>Serial Number</th>
+              <th>Organization</th>
+              <th>Venue</th>
+              <th>Date</th>
+              <th>Certificate Code</th>
+              <th>Hash Code</th>
+              <th>QR Code</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% generated_qr_codes.forEach( (generated_qr_code) => { %>
+            <tr>
+              <td>
+                <%= generated_qr_code.firstname %> <% if
+                (generated_qr_code.middlename) { %> <%=
+                generated_qr_code.middlename %> <% } %> <%=
+                generated_qr_code.lastname %>
+              </td>
+              <td><%= generated_qr_code.course %></td>
+              <td><%= generated_qr_code.course_code %></td>
+              <td><%= generated_qr_code.serial_number %></td>
+              <td><%= generated_qr_code.organization %></td>
+              <td><%= generated_qr_code.venue %></td>
+              <td>
+                <%= new Date(generated_qr_code.date).toLocaleDateString('en-PH',
+                { weekday: 'short', month: 'short', day: '2-digit', year:
+                'numeric', timeZone: 'Asia/Manila' }) %>
+              </td>
+              <td><%= generated_qr_code.certificate_code %></td>
+              <td><%= generated_qr_code.hash_code %></td>
+              <td>
+                <div class="image-container">
+                <img
+                  src="/qrcodes/<%= generated_qr_code.qr_image_path %>"
+                  alt="QR Code"
+                  width="50"
+                />
+                <a
+                href="/qrcodes/<%= generated_qr_code.qr_image_path %>"
+                download="<%= generated_qr_code.certificate_code %>.png"
+                class="download-btn"
+              >
+                <i class="fa-solid fa-download" style="color: #fff"></i>
+              </a>
+              </div>
+              </td>
+              <td id="actions">
+                <a
+                  id="edit-btn"
+                  href="/edit_generated_qr_code/<%= generated_qr_code.id %>"
+                  >EDIT</a
+                >
+                <form
+                  action="/delete_generated_qr_code/<%= generated_qr_code.id %>?_method=DELETE"
+                  method="POST"
+                >
+                  <button type="submit" id="delete-btn">DELETE</button>
+                </form>
+              </td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
+    <script
+      src="https://kit.fontawesome.com/0719113f1e.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="./js/view_all_generated.js"></script>
+    <script src="
+    https://cdn.jsdelivr.net/npm/sweetalert2@11.16.0/dist/sweetalert2.all.min.js
+    "></script>
+    <script>
+      document
+        .getElementById("deleteAll")
+        .addEventListener("click", function (event) {
+          event.preventDefault(); // Prevent the default form submission
+          Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete all!",
+            customClass: {
+              confirmButton: "text-center",
+              cancelButton: "text-center",
+            },
+          }).then((result) => {
+            if (result.isConfirmed) {
+        fetch("/delete_all", {
+          method: "DELETE",
+        })
+          .then((res) => {
+            if (res.redirected) {
+              window.location.href = res.url;
+            } else if (res.ok) {
+              Swal.fire("Deleted!", "All entries have been deleted.", "success");
+            } else {
+              Swal.fire("Error", "Something went wrong.", "error");
+            }
+          })
+          .catch((err) => {
+            console.error("Error:", err);
+            Swal.fire("Error", "Could not connect to server.", "error");
+          });
+      }
+          });
+        });
+        </script>
+  </body>
+</html>
