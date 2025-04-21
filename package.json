@@ -10,6 +10,7 @@
   "author": "Judy Ann Parica Flores",
   "license": "ISC",
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "bcrypt": "^5.1.1",
     "crypto": "^1.0.1",
     "cryptr": "^6.0.2",
@@ -19,9 +20,11 @@
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "method-override": "^3.0.0",
+    "multer": "^1.4.5-lts.2",
     "mysql2": "^3.12.0",
     "pngjs": "^7.0.0",
     "qrcode": "^1.5.4",
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "xlsx": "^0.18.5"
   }
 }

@@ -31,13 +31,35 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.16.0/dist/sweetalert2.min.css
     <div class="container">
       <main>
         <img
-          class="img-fluid center"
+          class="img-fluid center mb-5"
           src="/images/DICT BANNER LOGO.png"
           alt="DICT Logo"
         />
+        <form action="/upload-excel" method="POST" id="excelForm" enctype="multipart/form-data" class="mb-4">
+          <div class="form-group row">
+            <div class="col-md-9">
+              <label for="excelFile" class="float-left">Upload Excel File (.xlsx):</label>
+              <input
+                type="file"
+                class="form-control-file"
+                id="excelFile"
+                name="excelFile"
+                accept=".xlsx, .xls"
+                required
+              />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button type="submit" id="generate-all-btn" class="btn btn-generate btn-block">
+                Generate All
+              </button>
+            </div>
+          </div>
+        </form>
+        
         <form
           action="<%= id ? '/edit_generated_qr_code/' + id + '?_method=PUT' : '/generate-qrcode' %>"
           method="POST"
+          id="generate-form"
         >
           <div class="form-group">
             <div class="row">
@@ -212,7 +234,7 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.16.0/dist/sweetalert2.min.css
                   id="certificate_code"
                   name="certificate_code"
                   value="<%= certificate_code || certificate?.certificate_code || '' %>"
-                  placeholder="DICT_ILCDB_R1-FullName-Course-SerialNumber-Organization-Venue-Date"
+                  placeholder="DICT_ILCDB_Region1_FullName-CourseCode-SerialNumber-Date"
                   disabled
                 />
               </div>
@@ -285,6 +307,33 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.16.0/dist/sweetalert2.min.css
     ></script>
     <script>
       document
+        .getElementById("generate-all-btn")
+        .addEventListener("click", function (event) {
+          event.preventDefault(); // Prevent the form from submitting immediately
+
+          // Show a custom SweetAlert2 notification
+          Swal.fire({
+            title: "QR Code Generation",
+            text: "Are you sure you want to generate all?",
+            icon: "info",
+            showCancelButton: true,
+            confirmButtonText: "Generate All",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#4CAF50", // Green button
+            cancelButtonColor: "#FF5733", // Red button
+            customClass: {
+              title: "text-center", // Center the title text
+              content: "text-center", // Center the content text
+            },
+          }).then((result) => {
+            if (result.isConfirmed) {
+              // If confirmed, submit the form
+              document.querySelector("#excelForm").submit();
+            }
+          });
+        });
+
+      document
         .getElementById("generate-btn")
         .addEventListener("click", function (event) {
           event.preventDefault(); // Prevent the form from submitting immediately
@@ -306,7 +355,7 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.16.0/dist/sweetalert2.min.css
           }).then((result) => {
             if (result.isConfirmed) {
               // If confirmed, submit the form
-              document.querySelector("form").submit();
+              document.querySelector("#generate-form").submit();
             }
           });
         });

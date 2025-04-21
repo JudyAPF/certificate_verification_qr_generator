@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Certificate Verification QR Generator - All Generated QR Codes</title>
+    <title>
+      Certificate Verification QR Generator - All Generated QR Codes
+    </title>
     <link rel="icon" type="image/png" href="/images/logo.png" />
     <link
       rel="stylesheet"
@@ -51,13 +53,17 @@
           class="table table-hover word-break"
           style="width: 100%, stick"
         >
-        <div class="container mt-3 text-end d-flex justify-content-end gap-2"> 
-          <button id="downloadExcel" class="btn btn-success">
-            <i class="fa-solid fa-file-excel"></i> Download
-          </button>
-          <button id="deleteAll" type="submit">
-            <i class="fa-solid fa-trash"></i> Delete All</button>
-        </div>   
+          <div class="container mt-3 text-end d-flex justify-content-end gap-2">
+            <button id="downloadExcel" class="btn btn-success">
+              <i class="fa-solid fa-file-excel"></i> Download as Excel
+            </button>
+            <button id="downloadQRCodes" class="btn btn-primary">
+              <i class="fa-solid fa-file-zipper"></i> Download All QRCodes
+            </button>
+            <button id="deleteAll" type="submit">
+              <i class="fa-solid fa-trash"></i> Delete All
+            </button>
+          </div>
           <thead>
             <tr>
               <th>Fullname</th>
@@ -96,19 +102,19 @@
               <td><%= generated_qr_code.hash_code %></td>
               <td>
                 <div class="image-container">
-                <img
-                  src="/qrcodes/<%= generated_qr_code.qr_image_path %>"
-                  alt="QR Code"
-                  width="50"
-                />
-                <a
-                href="/qrcodes/<%= generated_qr_code.qr_image_path %>"
-                download="<%= generated_qr_code.certificate_code %>.png"
-                class="download-btn"
-              >
-                <i class="fa-solid fa-download" style="color: #fff"></i>
-              </a>
-              </div>
+                  <img
+                    src="/qrcodes/<%= generated_qr_code.qr_image_path %>"
+                    alt="QR Code"
+                    width="50"
+                  />
+                  <a
+                    href="/qrcodes/<%= generated_qr_code.qr_image_path %>"
+                    download="<%= generated_qr_code.certificate_code %>.png"
+                    class="download-btn"
+                  >
+                    <i class="fa-solid fa-download" style="color: #fff"></i>
+                  </a>
+                </div>
               </td>
               <td id="actions">
                 <a
@@ -160,25 +166,29 @@
             },
           }).then((result) => {
             if (result.isConfirmed) {
-        fetch("/delete_all", {
-          method: "DELETE",
-        })
-          .then((res) => {
-            if (res.redirected) {
-              window.location.href = res.url;
-            } else if (res.ok) {
-              Swal.fire("Deleted!", "All entries have been deleted.", "success");
-            } else {
-              Swal.fire("Error", "Something went wrong.", "error");
+              fetch("/delete_all", {
+                method: "DELETE",
+              })
+                .then((res) => {
+                  if (res.redirected) {
+                    window.location.href = res.url;
+                  } else if (res.ok) {
+                    Swal.fire(
+                      "Deleted!",
+                      "All entries have been deleted.",
+                      "success"
+                    );
+                  } else {
+                    Swal.fire("Error", "Something went wrong.", "error");
+                  }
+                })
+                .catch((err) => {
+                  console.error("Error:", err);
+                  Swal.fire("Error", "Could not connect to server.", "error");
+                });
             }
-          })
-          .catch((err) => {
-            console.error("Error:", err);
-            Swal.fire("Error", "Could not connect to server.", "error");
-          });
-      }
           });
         });
-        </script>
+    </script>
   </body>
 </html>

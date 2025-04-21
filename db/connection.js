@@ -7,7 +7,7 @@ const con = mysql.createConnection({
   // password: process.env.DB_PASSWORD,
   // user: process.env.DB_USERNAME,
   host: "localhost",
-  database: "certificate verification qr generator",
+  database: "certificate_verification_qr_generator",
   password: "",
   user: "root",
 });
@@ -15,5 +15,5 @@ const con = mysql.createConnection({
 con.connect((err) => {
   if (err) throw err;
   console.log("Connected!");
-  });
+});
 module.exports = con;

@@ -17,7 +17,11 @@ const sharp = require("sharp");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const ExcelJS = require("exceljs");
+const multer = require("multer");
+const xlsx = require("xlsx");
+const AdmZip = require("adm-zip");
 
+const upload = multer({ dest: "uploads/" });
 
 // Session middleware
 app.use(
@@ -331,14 +335,10 @@ app.post("/generate-qrcode", isLoggedIn, async (req, res) => {
       timeZone: "Asia/Manila",
     });
     // Proceed with QR Code Generation
-    const certificate_code = `DICT_ILCDB_Region1_${firstname}-${middlename}-${lastname}-${course_code}-${serial_number}-${date}`;
+    const certificate_code = `DICT_ILCDB_Region1_${firstname}${
+      middlename ? `-${middlename}` : ""
+    }-${lastname}-${course_code}-${serial_number}-${formatted_date}`;
     const hash_code = hashCertificateCode(certificate_code); // Generate a URL for verification
-    // const verification_url = `https://certificate-verification-qr-generator.onrender.com/verify?code=${encodeURIComponent(
-    //   serial_number
-    // )}`;
-    // const verification_url = `https://localhost:3000/verify?code=${encodeURIComponent(
-    //   serial_number
-    // )}`;
     const qr_image_path = await QRGenerate(hash_code, certificate_code);
 
     await con
@@ -404,15 +404,15 @@ app.get("/edit_generated_qr_code/:id", isLoggedIn, (req, res) => {
 
     if (result[0].date) {
       const dbDate = new Date(result[0].date);
-    
+
       // Ensure local time is used
       const year = dbDate.getFullYear();
       const month = String(dbDate.getMonth() + 1).padStart(2, "0"); // Months are 0-based
       const day = String(dbDate.getDate()).padStart(2, "0");
-    
+
       // Store for <input type="date"> (YYYY-MM-DD format)
       result[0].dateForInput = `${year}-${month}-${day}`;
-    
+
       // Store for display (DD/MM/YYYY format)
       result[0].dateForDisplay = `${day}/${month}/${year}`;
     }
@@ -482,7 +482,10 @@ app.put("/edit_generated_qr_code/:id", isLoggedIn, async (req, res) => {
     // Fetch the existing certificate details
     const [existingCertificate] = await con
       .promise()
-      .query("SELECT certificate_code, qr_image_path FROM certificates WHERE id = ?", [id]);
+      .query(
+        "SELECT certificate_code, qr_image_path FROM certificates WHERE id = ?",
+        [id]
+      );
 
     if (existingCertificate.length === 0) {
       return res.status(404).send("Certificate not found");
@@ -490,7 +493,12 @@ app.put("/edit_generated_qr_code/:id", isLoggedIn, async (req, res) => {
 
     const previousQRCode = existingCertificate[0].qr_image_path;
     if (previousQRCode) {
-      const previousQRCodePath = path.join(__dirname, "public", "qrcodes", previousQRCode);
+      const previousQRCodePath = path.join(
+        __dirname,
+        "public",
+        "qrcodes",
+        previousQRCode
+      );
       fs.unlink(previousQRCodePath, (err) => {
         if (err) {
           console.error("Error deleting previous QR code:", err);
@@ -507,8 +515,14 @@ app.put("/edit_generated_qr_code/:id", isLoggedIn, async (req, res) => {
       timeZone: "Asia/Manila",
     });
 
-    const certificate_code = `DICT_ILCDB_Region1_${firstname}-${middlename}-${lastname}-${course_code}-${serial_number}-${organization}-${date}`;
-    const qr_image_path = await QRGenerate(existingCertificate[0].certificate_code, certificate_code);
+    // Proceed with QR Code Generation
+    const certificate_code = `DICT_ILCDB_Region1_${firstname}${
+      middlename ? `-${middlename}` : ""
+    }-${lastname}-${course_code}-${serial_number}-${formatted_date}`;
+    const qr_image_path = await QRGenerate(
+      existingCertificate[0].certificate_code,
+      certificate_code
+    );
 
     await con
       .promise()
@@ -673,7 +687,9 @@ app.post("/change_password", async (req, res) => {
 
   try {
     // ✅ Fetch current password from DB
-    const [rows] = await con.promise().query("SELECT password FROM admin_user LIMIT 1");
+    const [rows] = await con
+      .promise()
+      .query("SELECT password FROM admin_user LIMIT 1");
 
     if (rows.length === 0) {
       return res.status(404).send("Admin user not found");
@@ -683,7 +699,8 @@ app.post("/change_password", async (req, res) => {
 
     // ✅ Check if the new password is the same as the old one
     if (new_password === storedPassword) {
-      errors.error = "New password cannot be the same as the previous password.";
+      errors.error =
+        "New password cannot be the same as the previous password.";
     }
 
     // If there are errors, return them
@@ -706,7 +723,9 @@ app.post("/change_password", async (req, res) => {
     }
 
     // ✅ Update password (Still in plain text)
-    await con.promise().query("UPDATE admin_user SET password = ?", [new_password]);
+    await con
+      .promise()
+      .query("UPDATE admin_user SET password = ?", [new_password]);
 
     res.render("signin", {
       success: "Password changed successfully!",
@@ -783,7 +802,12 @@ app.get("/download-excel", (req, res) => {
       // Embed QR image into the last column (col index 10, zero-based index 9)
       if (item.qr_image_path) {
         try {
-          const imagePath = path.join(__dirname, "public", "qrcodes", item.qr_image_path);
+          const imagePath = path.join(
+            __dirname,
+            "public",
+            "qrcodes",
+            item.qr_image_path
+          );
           const imageId = workbook.addImage({
             buffer: fs.readFileSync(imagePath),
             extension: "png",
@@ -793,12 +817,14 @@ app.get("/download-excel", (req, res) => {
           worksheet.addImage(imageId, {
             tl: { col: 9, row: rowIndex - 1, colOff: 0, rowOff: 0 }, // Top-left corner of the cell
             ext: { width: 100, height: 100 },
-            editAs: 'oneCell', // Ensures the image stays within the bounds of one cell
+            editAs: "oneCell", // Ensures the image stays within the bounds of one cell
           });
 
           // Adjust row height to fit the image if necessary
-          worksheet.getRow(rowIndex).height = Math.max(worksheet.getRow(rowIndex).height || 15, 100 * 0.75); // 100px at roughly 75 DPI
-
+          worksheet.getRow(rowIndex).height = Math.max(
+            worksheet.getRow(rowIndex).height || 15,
+            100 * 0.75
+          ); // 100px at roughly 75 DPI
         } catch (err) {
           console.warn("Failed to embed image:", err.message);
         }
@@ -811,26 +837,160 @@ app.get("/download-excel", (req, res) => {
     });
 
     // Headers for download
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", "attachment; filename=certificates.xlsx");
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=Participants Information with QR Code Verification.xlsx"
+    );
 
     await workbook.xlsx.write(res);
     res.end();
   });
 });
 
-
 app.delete("/delete_all", isLoggedIn, (req, res) => {
   const sql = "DELETE FROM certificates";
+
   con.query(sql, (err, result) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).send("Database error");
     }
+
+    // If a QR codes image exists, delete it from the 'public/qrcodes' folder
+    const qrDir = path.join(__dirname, "public/qrcodes");
+    fs.readdir(qrDir, (err, files) => {
+      if (err) {
+        console.error("Error reading QR code directory:", err);
+        return res.status(500).send("Error reading QR code directory");
+      }
+      files.forEach((file) => {
+        const filePath = path.join(qrDir, file);
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error("Error deleting QR code file:", err);
+          } else {
+            console.log("QR code file deleted successfully:", filePath);
+          }
+        });
+      });
+    });
+
     res.redirect("/view-all-generated");
   });
 });
 
+app.post(
+  "/upload-excel",
+  isLoggedIn,
+  upload.single("excelFile"),
+  async (req, res) => {
+    try {
+      const workbook = xlsx.readFile(req.file.path);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = xlsx.utils.sheet_to_json(sheet);
+
+      const inserted = [];
+
+      for (const row of rows) {
+        const {
+          firstname,
+          middlename = "",
+          lastname,
+          course,
+          course_code,
+          serial_number,
+          organization,
+          venue,
+          date,
+        } = row;
+
+        // Check if serial already exists
+        const [existing] = await con
+          .promise()
+          .query("SELECT * FROM certificates WHERE serial_number = ?", [
+            serial_number,
+          ]);
+        if (existing.length > 0) {
+          console.log(`Skipping duplicate serial: ${serial_number}`);
+          continue;
+        }
+
+        const formatted_date = new Date(date).toLocaleDateString("en-PH", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          timeZone: "Asia/Manila",
+        });
+
+        // Proceed with QR Code Generation
+        const certificate_code = `DICT_ILCDB_Region1_${firstname}${
+          middlename ? `-${middlename}` : ""
+        }-${lastname}-${course_code}-${serial_number}-${formatted_date}`;
+        const hash_code = hashCertificateCode(certificate_code);
+        const qr_image_path = await QRGenerate(hash_code, certificate_code);
+
+        await con
+          .promise()
+          .query(
+            "INSERT INTO certificates (firstname, middlename, lastname, course, course_code, serial_number, organization, venue, date, certificate_code, hash_code, qr_image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+              firstname,
+              middlename,
+              lastname,
+              course,
+              course_code,
+              serial_number,
+              organization,
+              venue,
+              date,
+              certificate_code,
+              hash_code,
+              qr_image_path,
+            ]
+          );
+
+        inserted.push({ certificate_code, serial_number });
+      }
+
+      res.redirect("/view-all-generated");
+    } catch (err) {
+      console.error("Error processing Excel upload:", err);
+      res.status(500).send("Bulk upload failed");
+    }
+  }
+);
+
+app.get("/download-qr-codes", isLoggedIn, (req, res) => {
+  const qrDir = path.join(__dirname, "public/qrcodes");
+  const zip = new AdmZip();
+  fs.readdir(qrDir, (err, files) => {
+    if (err) {
+      console.error("Error reading QR code directory:", err);
+      return res.status(500).send("Error reading QR code directory");
+    }
+    files.forEach((file) => {
+      const filePath = path.join(qrDir, file);
+      zip.addLocalFile(filePath);
+    });
+    const zipPath = path.join(__dirname, "public", "qrcodes.zip");
+    zip.writeZip(zipPath);
+    res.download(zipPath, "qrcodes.zip", (err) => {
+      if (err) {
+        console.error("Error downloading ZIP file:", err);
+      }
+      fs.unlink(zipPath, (err) => {
+        if (err) {
+          console.error("Error deleting ZIP file:", err);
+        }
+      });
+    });
+  });
+});
+
 app.listen(3000, () => {
-  console.log(`URL: http://localhost:${port}`);
+  console.log(`URL: http://localhost:${3000}`);
 });
