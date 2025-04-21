@@ -1,6 +1,4 @@
 require("dotenv").config();
-const Cryptr = require("cryptr");
-const cryptr = new Cryptr("DICT_Region_1_ILCDB");
 const QRCode = require("qrcode");
 const path = require("path");
 const express = require("express");
@@ -8,19 +6,16 @@ const app = express();
 const session = require("express-session");
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-const port = process.env.PORT;
 const con = require("./db/connection");
 const fs = require("fs");
 const methodOverride = require("method-override");
 app.use(methodOverride("_method"));
 const sharp = require("sharp");
 const crypto = require("crypto");
-const bcrypt = require("bcrypt");
 const ExcelJS = require("exceljs");
 const multer = require("multer");
 const xlsx = require("xlsx");
 const AdmZip = require("adm-zip");
-
 const upload = multer({ dest: "uploads/" });
 
 // Session middleware
