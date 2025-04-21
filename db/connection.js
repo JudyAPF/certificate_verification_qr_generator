@@ -6,10 +6,10 @@ const con = mysql.createConnection({
   // database: process.env.DB_DBNAME,
   // password: process.env.DB_PASSWORD,
   // user: process.env.DB_USERNAME,
-  host: "localhost",
-  database: "certificate_verification_qr_generator",
-  password: "",
-  user: "root",
+  host: "bwlofjgqlkgz9udbcdj1-mysql.services.clever-cloud.com",
+  database: "bwlofjgqlkgz9udbcdj1",
+  password: "0UsEl8fJ2ODovWSEjR08",
+  user: "ulugl6lnxcdal28v",
 });
 
 con.connect((err) => {

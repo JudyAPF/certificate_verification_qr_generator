@@ -978,7 +978,7 @@ app.get("/download-qr-codes", isLoggedIn, (req, res) => {
     });
     const zipPath = path.join(__dirname, "public", "qrcodes.zip");
     zip.writeZip(zipPath);
-    res.download(zipPath, "qrcodes.zip", (err) => {
+    res.download(zipPath, "generated_qrcodes.zip", (err) => {
       if (err) {
         console.error("Error downloading ZIP file:", err);
       }
