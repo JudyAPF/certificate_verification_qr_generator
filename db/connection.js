@@ -6,6 +6,10 @@ const con = mysql.createConnection({
   database: "bwlofjgqlkgz9udbcdj1",
   password: "0UsEl8fJ2ODovWSEjR08",
   user: "ulugl6lnxcdal28v",
+  // host: "localhost",
+  // database: "certificate verification qr generator",
+  // password: "",
+  // user: "root",
 });
 
 con.connect((err) => {

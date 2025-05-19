@@ -35,13 +35,18 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.16.0/dist/sweetalert2.min.css
           src="/images/DICT BANNER LOGO.png"
           alt="DICT Logo"
         />
+        <% if (typeof error !== 'undefined') { %>
+          <div style="background-color: #ffcccc; color: #a00; padding: 10px; margin: 10px 0; border: 1px solid #a00;">
+            <strong>Error:</strong> <%= error %>
+          </div>
+        <% } %>        
         <form action="/upload-excel" method="POST" id="excelForm" enctype="multipart/form-data" class="mb-4">
           <div class="form-group row">
             <div class="col-md-9">
               <label for="excelFile" class="float-left">Upload Excel File (.xlsx):</label>
               <input
                 type="file"
-                class="form-control-file"
+                class="form-control-form"
                 id="excelFile"
                 name="excelFile"
                 accept=".xlsx, .xls"

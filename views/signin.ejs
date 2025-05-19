@@ -63,22 +63,26 @@
         </div>
         <div class="input-container">
           <div class="input-wrapper">
-            <i class="fa fa-key icon"></i>
-            <input
-              class="input-field"
-              type="password"
-              placeholder="Password"
-              name="password"
-              id="password"
-              value="<%= admin?.password || '' %>"
-            />
-            <i class="fa fa-eye toggle-password" id="toggle-password"></i> <!-- 👁️ Eye Icon -->
+            <div class="position-relative">
+              <i class="fa fa-key icon"></i>
+              <input
+                class="input-field"
+                type="password"
+                placeholder="Password"
+                name="password"
+                id="password"
+                value="<%= admin?.password || '' %>"
+              />
+              <!-- 👁️ Eye Icon -->
+              <i class="fa fa-eye toggle-password" id="toggle-password"></i>
+            </div>
+            <% if (errors?.password) { %>
+            <p class="text-danger"><%= errors.password %></p>
+            <!-- Moved outside .input-wrapper -->
+            <% } %>
           </div>
-          <% if (errors?.password) { %>
-          <p class="text-danger"><%= errors.password %></p> <!-- Moved outside .input-wrapper -->
-          <% } %>
         </div>
-        
+
         <div class="float-left">
           <a
             href="/change_password"
@@ -98,20 +102,22 @@
       crossorigin="anonymous"
     ></script>
     <script>
-      document.getElementById("toggle-password").addEventListener("click", function () {
-    let passwordField = document.getElementById("password");
-    let icon = this;
+      document
+        .getElementById("toggle-password")
+        .addEventListener("click", function () {
+          let passwordField = document.getElementById("password");
+          let icon = this;
 
-    if (passwordField.type === "password") {
-      passwordField.type = "text";
-      icon.classList.remove("fa-eye");
-      icon.classList.add("fa-eye-slash");
-    } else {
-      passwordField.type = "password";
-      icon.classList.remove("fa-eye-slash");
-      icon.classList.add("fa-eye");
-    }
-  });
+          if (passwordField.type === "password") {
+            passwordField.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+          } else {
+            passwordField.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+          }
+        });
     </script>
   </body>
 </html>

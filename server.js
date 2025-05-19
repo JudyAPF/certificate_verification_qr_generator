@@ -17,6 +17,9 @@ const multer = require("multer");
 const xlsx = require("xlsx");
 const AdmZip = require("adm-zip");
 const upload = multer({ dest: "uploads/" });
+const dayjs = require("dayjs");
+const customParseFormat = require("dayjs/plugin/customParseFormat");
+dayjs.extend(customParseFormat);
 
 // Session middleware
 app.use(
@@ -62,6 +65,7 @@ app.get("/home", isLoggedIn, (req, res) => {
       certificate_code: "",
       qr_image_path: "",
       id: null,
+      error: req.query.error,
     });
   });
 });
@@ -319,6 +323,7 @@ app.post("/generate-qrcode", isLoggedIn, async (req, res) => {
         certificate_code: "",
         qr_image_path: "",
         id: null,
+        error: req.query.error,
       });
     }
 
@@ -375,6 +380,7 @@ app.post("/generate-qrcode", isLoggedIn, async (req, res) => {
       certificate_code,
       qr_image_path,
       id: null,
+      error: req.query.error,
     });
   } catch (error) {
     console.error(error);
@@ -426,6 +432,7 @@ app.get("/edit_generated_qr_code/:id", isLoggedIn, (req, res) => {
         certificate_code: "",
         qr_image_path: "",
         id: id,
+        error: req.query.error,
       });
     });
   });
@@ -878,17 +885,81 @@ app.delete("/delete_all", isLoggedIn, (req, res) => {
   });
 });
 
+// Utility to remove characters not allowed in file names
+function sanitizeForFilename(str) {
+  return String(str).replace(/[\/\\:*?"<>|]/g, "");
+}
+
+// Utility to remove characters not allowed in file names
+function sanitizeForFilename(str) {
+  return String(str).replace(/[\/\\:*?"<>|]/g, "");
+}
+
 app.post(
   "/upload-excel",
   isLoggedIn,
   upload.single("excelFile"),
   async (req, res) => {
+    if (!req.file) {
+      console.error("No file uploaded");
+      return res.redirect("/?error=" + encodeURIComponent("No file uploaded."));
+    }
+
     try {
       const workbook = xlsx.readFile(req.file.path);
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = xlsx.utils.sheet_to_json(sheet);
 
-      const inserted = [];
+      if (rows.length === 0) {
+        return res.redirect(
+          "/?error=" + encodeURIComponent("Excel file is empty.")
+        );
+      }
+
+      const expectedHeaders = [
+        "firstname",
+        "middlename", // optional
+        "lastname",
+        "course",
+        "course_code",
+        "serial_number",
+        "organization",
+        "venue",
+        "date",
+      ];
+      const actualHeaders = Object.keys(rows[0]).map((h) => h.toLowerCase());
+      const missingHeaders = expectedHeaders.filter(
+        (header) => header !== "middlename" && !actualHeaders.includes(header)
+      );
+
+      if (missingHeaders.length > 0) {
+        return res.redirect(
+          "/home?error=" +
+            encodeURIComponent(
+              `Invalid Excel format. Missing columns: ${missingHeaders.join(
+                ", "
+              )}`
+            )
+        );
+      }
+
+      const unexpectedHeaders = actualHeaders.filter(
+        (header) => !expectedHeaders.includes(header)
+      );
+
+      if (unexpectedHeaders.length > 0) {
+        return res.redirect(
+          "/home?error=" +
+            encodeURIComponent(
+              `Excel format error. Unexpected column(s): ${unexpectedHeaders.join(
+                ", "
+              )}`
+            )
+        );
+      }
+
+      const errors = [];
+      const validRows = [];
 
       for (const row of rows) {
         const {
@@ -903,28 +974,82 @@ app.post(
           date,
         } = row;
 
-        // Check if serial already exists
         const [existing] = await con
           .promise()
           .query("SELECT * FROM certificates WHERE serial_number = ?", [
             serial_number,
           ]);
         if (existing.length > 0) {
-          console.log(`Skipping duplicate serial: ${serial_number}`);
+          errors.push(`Duplicate serial number: ${serial_number}`);
           continue;
         }
 
-        const formatted_date = new Date(date).toLocaleDateString("en-PH", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          timeZone: "Asia/Manila",
-        });
+        let parsedDate;
+        if (typeof date === "number") {
+          parsedDate = dayjs(
+            new Date(1900, 0, 1).getTime() + (date - 2) * 86400000
+          );
+        } else {
+          parsedDate = dayjs(
+            date,
+            ["M/D/YYYY", "YYYY/MM/DD", "DD/MM/YYYY"],
+            true
+          );
+        }
 
-        // Proceed with QR Code Generation
-        const certificate_code = `DICT_ILCDB_Region1_${firstname}${
-          middlename ? `-${middlename}` : ""
-        }-${lastname}-${course_code}-${serial_number}-${formatted_date}`;
+        if (!parsedDate.isValid()) {
+          errors.push(`Invalid date format for serial: ${serial_number}`);
+          continue;
+        }
+
+        validRows.push({
+          firstname,
+          middlename,
+          lastname,
+          course,
+          course_code,
+          serial_number,
+          organization,
+          venue,
+          parsedDate,
+        });
+      }
+
+      if (errors.length > 0) {
+        fs.unlink(req.file.path, () => {});
+        return res.redirect(
+          "/home?error=" +
+            encodeURIComponent(
+              "Upload failed. Issues found:\n" + errors.join("\n")
+            )
+        );
+      }
+
+      const inserted = [];
+
+      for (const row of validRows) {
+        const {
+          firstname,
+          middlename,
+          lastname,
+          course,
+          course_code,
+          serial_number,
+          organization,
+          venue,
+          parsedDate,
+        } = row;
+
+        const formatted_date = parsedDate.format("MMMM D, YYYY");
+        const dbDate = parsedDate.format("YYYY-MM-DD");
+
+        const safeMiddlename = sanitizeForFilename(middlename);
+        const safeFirstname = sanitizeForFilename(firstname);
+        const safeLastname = sanitizeForFilename(lastname);
+
+        const certificate_code = `DICT_ILCDB_Region1_${safeFirstname}${
+          safeMiddlename ? `-${safeMiddlename}` : ""
+        }-${safeLastname}-${course_code}-${serial_number}-${formatted_date}`;
         const hash_code = hashCertificateCode(certificate_code);
         const qr_image_path = await QRGenerate(hash_code, certificate_code);
 
@@ -941,7 +1066,7 @@ app.post(
               serial_number,
               organization,
               venue,
-              date,
+              dbDate,
               certificate_code,
               hash_code,
               qr_image_path,
@@ -951,13 +1076,37 @@ app.post(
         inserted.push({ certificate_code, serial_number });
       }
 
+      clearUploadsFolder(); // Clear the uploads folder after processing
+
       res.redirect("/view-all-generated");
     } catch (err) {
       console.error("Error processing Excel upload:", err);
-      res.status(500).send("Bulk upload failed");
+      return res.redirect(
+        "/home?error=" + encodeURIComponent("Failed to process file.")
+      );
     }
   }
 );
+
+function clearUploadsFolder() {
+  const uploadsDir = path.join(__dirname, "uploads");
+  fs.readdir(uploadsDir, (err, files) => {
+    if (err) {
+      console.error("Error reading uploads directory:", err);
+      return;
+    }
+    files.forEach((file) => {
+      const filePath = path.join(uploadsDir, file);
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error("Error deleting file:", err);
+        } else {
+          console.log("File deleted successfully:", filePath);
+        }
+      });
+    });
+  });
+}
 
 app.get("/download-qr-codes", isLoggedIn, (req, res) => {
   const qrDir = path.join(__dirname, "public/qrcodes");
